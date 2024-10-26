@@ -7,16 +7,13 @@ namespace TP5.Controllers;
 [Route("[controller]")]
 public class ProductosController : ControllerBase
 {
-    private ProductosRepository pr;
-    private List<Productos> productos;
+    private ProductosRepository productosRepository;
 
     public ProductosController() {
-        this.pr = new ProductosRepository();
+        this.productosRepository = new ProductosRepository();
     }
 
     [HttpGet("api/Producto")]
-    public ActionResult<List<Productos>> GetAllProducts() {
-        this.productos = pr.GetAllProducts();
-        return Ok(productos);
-    }
+    public ActionResult<List<Productos>> GetAllProducts() => Ok(productosRepository.GetAllProducts());
+
 }
