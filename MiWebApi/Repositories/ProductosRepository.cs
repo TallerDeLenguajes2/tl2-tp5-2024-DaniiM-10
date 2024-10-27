@@ -46,9 +46,25 @@ public class ProductosRepository {
                 connection.Close();            
             }
             return true;
-        } catch (Exception ex) {
-            return false;
-        }
+        } catch (Exception ex) { return false; }
     }
 
+    public bool PutProduct(int idProducto, Productos producto) {
+        string queryString = @"UPDATE Productos SET Descripcion = @Descripcion, Precio = @Precio WHERE idProducto = @IdP";
+
+        try {
+
+            using (SqliteConnection connection = new SqliteConnection(ConnectionString))
+            {
+                SqliteCommand command = new SqliteCommand(queryString, connection);
+                connection.Open();
+                command.Parameters.AddWithValue("@Descripcion", producto.Descripcion);
+                command.Parameters.AddWithValue("@Precio", producto.Precio);
+                command.Parameters.AddWithValue("@IdP", idProducto);
+                command.ExecuteNonQuery();
+                connection.Close();            
+            }
+            return true;
+        } catch (Exception ex) { return false; }
+    }
 }

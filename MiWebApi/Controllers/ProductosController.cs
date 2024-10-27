@@ -18,5 +18,7 @@ public class ProductosController : ControllerBase
 
     [HttpPost("api/Producto")]
     public ActionResult PostProduct([FromBody] Productos producto) => (productosRepository.PostProduct(producto)) ? Created() : StatusCode(500);
-    
+
+    [HttpPut("/api/Producto/{IdP:int}")]
+    public ActionResult PutProduct(int IdP, [FromBody] Productos producto) => (productosRepository.PutProduct(IdP, producto)) ? Ok() : StatusCode(500);
 }
