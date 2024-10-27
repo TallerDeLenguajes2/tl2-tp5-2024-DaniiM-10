@@ -7,7 +7,7 @@ public class ProductosRepository {
     public ProductosRepository() {}
 
     public List<Productos> GetAllProducts() {
-        List<Productos> productos = new List<Productos>();
+        List<Productos> products = new List<Productos>();
         
         using (SqliteConnection connection = new SqliteConnection(ConnectionString))
         {
@@ -19,29 +19,29 @@ public class ProductosRepository {
             {
                 while (reader.Read())
                 {
-                    Productos producto = new Productos();
-                    producto.setIdProducto(Convert.ToInt32(reader["idProducto"]));
-                    producto.Descripcion = reader["Descripcion"].ToString();
-                    producto.Precio = Convert.ToInt32(reader["Precio"]);
-                    productos.Add(producto);
+                    Productos product = new Productos();
+                    product.setIdProducto(Convert.ToInt32(reader["idProducto"]));
+                    product.Descripcion = reader["Descripcion"].ToString();
+                    product.Precio = Convert.ToInt32(reader["Precio"]);
+                    products.Add(product);
                 }
             }
             connection.Close();
         }
 
-        return productos;
+        return products;
     }
 
-    public bool PostProduct(Productos producto) {
-        string queryString = @"INSERT INTO Productos (Descripcion, Precio) VALUES (@Descripcion, @Precio)";
+    public bool PostProduct(Productos product) {
+        string queryString = @"INSERT INTO Productos (Descripcion, Precio) VALUES (@Descripcion, @Precio);";
 
         try {
             using (SqliteConnection connection = new SqliteConnection(ConnectionString))
             {
                 SqliteCommand command = new SqliteCommand(queryString, connection);
                 connection.Open();
-                command.Parameters.AddWithValue("@Descripcion", producto.Descripcion);
-                command.Parameters.AddWithValue("@Precio", producto.Precio);
+                command.Parameters.AddWithValue("@Descripcion", product.Descripcion);
+                command.Parameters.AddWithValue("@Precio", product.Precio);
                 command.ExecuteNonQuery();
                 connection.Close();            
             }
@@ -49,8 +49,8 @@ public class ProductosRepository {
         } catch (Exception ex) { return false; }
     }
 
-    public bool PutProduct(int idProducto, Productos producto) {
-        string queryString = @"UPDATE Productos SET Descripcion = @Descripcion, Precio = @Precio WHERE idProducto = @IdP";
+    public bool PutProduct(int idProduct, Productos product) {
+        string queryString = @"UPDATE Productos SET Descripcion = @Descripcion, Precio = @Precio WHERE idProducto = @IdP;";
 
         try {
 
@@ -58,13 +58,49 @@ public class ProductosRepository {
             {
                 SqliteCommand command = new SqliteCommand(queryString, connection);
                 connection.Open();
-                command.Parameters.AddWithValue("@Descripcion", producto.Descripcion);
-                command.Parameters.AddWithValue("@Precio", producto.Precio);
-                command.Parameters.AddWithValue("@IdP", idProducto);
+                command.Parameters.AddWithValue("@Descripcion", product.Descripcion);
+                command.Parameters.AddWithValue("@Precio", product.Precio);
+                command.Parameters.AddWithValue("@IdP", idProduct);
                 command.ExecuteNonQuery();
                 connection.Close();            
             }
             return true;
         } catch (Exception ex) { return false; }
+    }
+
+    public Productos GetProduct(int idProduct) {
+        using (SqliteConnection connection = new SqliteConnection(ConnectionString)) {
+            string queryString = @"SELECT * FROM Productos WHERE idProducto = @IdP;";
+            
+            SqliteCommand command = new SqliteCommand(queryString, connection);
+            command.Parameters.AddWithValue("@IdP", idProduct);
+
+            connection.Open();
+            
+            using (SqliteDataReader reader = command.ExecuteReader()) {
+                if (reader.Read()) {
+                    Productos product = new Productos();
+                    product.setIdProducto(Convert.ToInt32(reader["idProducto"]));
+                    product.Descripcion = reader["Descripcion"].ToString();
+                    product.Precio = Convert.ToInt32(reader["Precio"]);
+                    return product;
+                }
+            }
+        }
+        return null;
+    }
+
+    public bool DeleteProduct(int idProduct) {
+        string queryString = @"DELETE FROM Productos WHERE idProducto = @IdP;";
+        using (SqliteConnection connection = new SqliteConnection(ConnectionString)) {
+        
+            SqliteCommand command = new SqliteCommand(queryString, connection);
+            command.Parameters.AddWithValue("@IdP", idProduct);
+
+            connection.Open();
+            int rowsAffected = command.ExecuteNonQuery();
+            connection.Close();
+            return rowsAffected > 0;
+        }
     }
 }
