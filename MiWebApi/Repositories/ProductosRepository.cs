@@ -83,9 +83,11 @@ public class ProductosRepository {
                     product.setIdProducto(Convert.ToInt32(reader["idProducto"]));
                     product.Descripcion = reader["Descripcion"].ToString();
                     product.Precio = Convert.ToInt32(reader["Precio"]);
+                    connection.Close();
                     return product;
                 }
             }
+            connection.Close();
         }
         return null;
     }
