@@ -16,4 +16,7 @@ public class ProductosController : ControllerBase
     [HttpGet("api/Producto")]
     public ActionResult<List<Productos>> GetAllProducts() => Ok(productosRepository.GetAllProducts());
 
+    [HttpPost("api/Producto")]
+    public ActionResult PostProduct([FromBody] Productos producto) => (productosRepository.PostProduct(producto)) ? Created() : StatusCode(500);
+    
 }

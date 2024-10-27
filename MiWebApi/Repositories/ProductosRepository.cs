@@ -11,7 +11,7 @@ public class ProductosRepository {
         
         using (SqliteConnection connection = new SqliteConnection(ConnectionString))
         {
-            string queryString = "SELECT * FROM Productos;";
+            string queryString = @"SELECT * FROM Productos;";
 
             SqliteCommand command = new SqliteCommand(queryString, connection);
             connection.Open();
@@ -20,9 +20,9 @@ public class ProductosRepository {
                 while (reader.Read())
                 {
                     Productos producto = new Productos();
-                    producto.idProducto = Convert.ToInt32(reader["idProducto"]);
-                    producto.descripcion = reader["Descripcion"].ToString();
-                    producto.precio = Convert.ToInt32(reader["Precio"]);
+                    producto.setIdProducto(Convert.ToInt32(reader["idProducto"]));
+                    producto.Descripcion = reader["Descripcion"].ToString();
+                    producto.Precio = Convert.ToInt32(reader["Precio"]);
                     productos.Add(producto);
                 }
             }
@@ -31,4 +31,24 @@ public class ProductosRepository {
 
         return productos;
     }
+
+    public bool PostProduct(Productos producto) {
+        string queryString = @"INSERT INTO Productos (Descripcion, Precio) VALUES (@Descripcion, @Precio)";
+
+        try {
+            using (SqliteConnection connection = new SqliteConnection(ConnectionString))
+            {
+                SqliteCommand command = new SqliteCommand(queryString, connection);
+                connection.Open();
+                command.Parameters.AddWithValue("@Descripcion", producto.Descripcion);
+                command.Parameters.AddWithValue("@Precio", producto.Precio);
+                command.ExecuteNonQuery();
+                connection.Close();            
+            }
+            return true;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
 }
