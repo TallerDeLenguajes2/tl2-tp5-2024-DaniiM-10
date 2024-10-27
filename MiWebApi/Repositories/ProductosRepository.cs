@@ -95,9 +95,9 @@ public class ProductosRepository {
         using (SqliteConnection connection = new SqliteConnection(ConnectionString)) {
         
             SqliteCommand command = new SqliteCommand(queryString, connection);
+            connection.Open();
             command.Parameters.AddWithValue("@IdP", idProduct);
 
-            connection.Open();
             int rowsAffected = command.ExecuteNonQuery();
             connection.Close();
             return rowsAffected > 0;
