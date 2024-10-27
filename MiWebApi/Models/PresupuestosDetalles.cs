@@ -1,15 +1,15 @@
 namespace TP5.Models;
 
 public class PresupuestosDetalles {
-    private Productos producto1;
+    private Productos productoPrivate;
     public PresupuestosDetalles() {
-        this.producto1 = new Productos();
+        this.productoPrivate = new Productos();
     }
 
-    public Productos producto { get => producto; }
+    public Productos producto { get => productoPrivate; }
     public int cantidad { get; set; }
 
     public void CargarProducto(Productos producto) {
-        this.producto1 = producto;
+        this.productoPrivate = producto;
     }
 }
