@@ -12,4 +12,5 @@ public class PresupuestosDetalles {
     public void CargarProducto(Productos producto) {
         this.productoPrivate = producto;
     }
+    
 }
