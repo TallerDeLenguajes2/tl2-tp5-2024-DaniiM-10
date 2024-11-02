@@ -14,20 +14,21 @@ public class ProductosController : ControllerBase
     }
 
     [HttpGet("api/Producto")]
-    public ActionResult<List<Productos>> GetAllProducts() => Ok(productosRepository.GetAllProducts());
+    public ActionResult<List<Productos>> GetAllProducts() => Ok(productosRepository.GetProductos());
 
     [HttpGet("api/Producto/{idP:int}")]
     public ActionResult<Productos> GetProductById(int idP) {
-        Productos responseP = productosRepository.GetProduct(idP);
+        Productos responseP = productosRepository.GetProducto(idP);
         return ((responseP != null) ? Ok(responseP) : NotFound(new { message = "Producto no encontrado :(" }));
     }
 
     [HttpPost("api/Producto")]
-    public ActionResult PostProduct([FromBody] Productos producto) => (productosRepository.PostProduct(producto)) ? Created() : StatusCode(500);
+    public ActionResult PostProduct([FromBody] Productos producto) => (productosRepository.PostProducto(producto)) ? Created() : StatusCode(500);
 
     [HttpPut("/api/Producto/{IdP:int}")]
-    public ActionResult PutProduct(int IdP, [FromBody] Productos producto) => (productosRepository.PutProduct(IdP, producto)) ? Ok() : StatusCode(500);
+    public ActionResult PutProduct(int IdP, [FromBody] Productos producto) => (productosRepository.PutProducto(IdP, producto)) ? Ok() : StatusCode(500);
 
     [HttpDelete("api/Producto/{IdP:int}")]
     public ActionResult DeleteProduct(int IdP) => (productosRepository.DeleteProduct(IdP)) ? Ok() : StatusCode(500);
+    
 }
