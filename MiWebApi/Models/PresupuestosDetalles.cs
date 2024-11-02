@@ -9,8 +9,7 @@ public class PresupuestosDetalles {
     public Productos producto { get => productoPrivate; }
     public int cantidad { get; set; }
 
-    public void CargarProducto(Productos producto) {
+    public void SetProducto(Productos producto) {
         this.productoPrivate = producto;
     }
-    
 }

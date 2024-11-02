@@ -20,5 +20,4 @@ public class Presupuestos {
     public void setIdPresupuesto(int idPr) {
         this.idPresupuestoPrivate = idPr;
     }
-    
 }

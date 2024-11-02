@@ -9,5 +9,4 @@ public class Productos {
     public void setIdProducto(int idP) {
         this.idProductoPrivate = idP;
     }
-    
 }

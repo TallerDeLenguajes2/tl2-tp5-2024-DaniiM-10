@@ -5,7 +5,7 @@ public class ProductosRepository
 {
     private string ConnectionString = @"Data Source=db/Tienda.db;Cache=Shared";
 
-    public ProductosRepository() { }
+    public ProductosRepository() {}
 
     public List<Productos> GetProductos()
     {

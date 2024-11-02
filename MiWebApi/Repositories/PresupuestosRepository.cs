@@ -1,10 +1,14 @@
 using Microsoft.Data.Sqlite;
 namespace TP5.Models;
 
-public class PresupuestosRepository {
+public class PresupuestosRepository 
+{
     private string ConnectionString = @"Data Source=db/Tienda.db;Cache=Shared";
+    private ProductosRepository productosRepository;
 
-    public PresupuestosRepository() {}
+    public PresupuestosRepository() {
+        productosRepository = new ProductosRepository();
+    }
     public List<Presupuestos> GetPresupuestos() {
         //asdasdasda 
         List<Presupuestos> presupuestos = new List<Presupuestos>();
@@ -24,18 +28,109 @@ public class PresupuestosRepository {
                     presupuesto.NombreDestinatario = reader["NombreDestinatario"].ToString();
                     presupuesto.FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]);
 
-                    presupuesto.setDetallesPresupuesto(GetPresupuestosDetalles(Convert.ToInt32(reader["idPresupuesto"])));
+                    presupuesto.setDetallesPresupuesto(
+                        GetPresupuestosDetalles(Convert.ToInt32(reader["idPresupuesto"]))
+                    );
 
                     presupuestos.Add(presupuesto);
                 }
             }
-            connection.Close();
         }
 
         return presupuestos;
     }
 
-    private List<PresupuestosDetalles> GetPresupuestosDetalles(int id) {
+    public Presupuestos GetPresupuestoId(int idPr) {
+        Presupuestos presupuesto = null;
+
+        using (SqliteConnection connection = new SqliteConnection(ConnectionString)) {
+            string queryString = @"SELECT * 
+            FROM Presupuestos
+            WHERE idPresupuesto = @idPr;";
+
+            using (SqliteCommand command = new SqliteCommand(queryString, connection)) 
+            {
+                command.Parameters.AddWithValue("@idPr", idPr);
+                connection.Open();
+                
+                using (SqliteDataReader reader = command.ExecuteReader()) {
+                    if (reader.Read()) {
+                        presupuesto = new Presupuestos();
+                        presupuesto.setIdPresupuesto(Convert.ToInt32(reader["idPresupuesto"]));
+                        presupuesto.NombreDestinatario = reader["NombreDestinatario"].ToString();
+                        presupuesto.FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]);
+
+                        presupuesto.setDetallesPresupuesto(
+                            GetPresupuestosDetalles(Convert.ToInt32(reader["idPresupuesto"]))
+                        );
+                    }
+                }
+            }
+        }
+        return presupuesto;
+    }
+
+    public bool PostPresupuesto(Presupuestos presupuesto) {
+        bool validarInsert = false;
+
+        using (SqliteConnection connection = new SqliteConnection(ConnectionString)) 
+        {
+            connection.Open();
+                
+            using (var transaction = connection.BeginTransaction()) 
+            {
+                string queryString = @"INSERT INTO Presupuestos (NombreDestinatario, FechaCreacion) 
+                                    VALUES (@NombreDestinatario, @FechaCreacion);
+                                    SELECT last_insert_rowid();";
+
+                using (SqliteCommand command = new SqliteCommand(queryString, connection, transaction)) {
+                    command.Parameters.AddWithValue("@NombreDestinatario", presupuesto.NombreDestinatario);
+                    command.Parameters.AddWithValue("@FechaCreacion", presupuesto.FechaCreacion);
+
+                    command.ExecuteNonQuery();
+                }
+
+                transaction.Commit();
+                validarInsert = true;
+            }
+        }
+        return validarInsert;
+    }
+
+    public bool PostPresupuestoDetalle(int idPresupuesto, PresupuestosDetallesPost presupuestosDetalles) {
+        bool validarInsert = false;
+        
+        Productos producto = productosRepository.GetProducto(presupuestosDetalles.idProducto);
+        Presupuestos presupuesto = GetPresupuestoId(idPresupuesto);
+
+        if(producto != null && presupuesto != null) {
+            using (SqliteConnection connection = new SqliteConnection(ConnectionString)) 
+            {
+                connection.Open();
+
+                using (var transaction = connection.BeginTransaction()) 
+                {
+                    string queryString = @"INSERT INTO PresupuestosDetalle (idPresupuesto, idProducto, Cantidad) 
+                    VALUES (@idPresupuesto, @idProducto, @Cantidad);";
+
+                    using (SqliteCommand command = new SqliteCommand(queryString, connection, transaction)) {
+                        command.Parameters.AddWithValue("@idPresupuesto", idPresupuesto);
+                        command.Parameters.AddWithValue("@idProducto", presupuestosDetalles.idProducto);
+                        command.Parameters.AddWithValue("@Cantidad", presupuestosDetalles.cantidad);
+
+                        command.ExecuteNonQuery();
+                    }
+
+                    transaction.Commit();
+                    validarInsert = true;
+                }
+            }
+        }
+        return validarInsert;
+    }
+
+    // Funcion Auxiliar
+    private List<PresupuestosDetalles> GetPresupuestosDetalles(int idPresupuesto) {
         List<PresupuestosDetalles> pdList = new List<PresupuestosDetalles>();
 
         using (SqliteConnection connection = new SqliteConnection(ConnectionString)) {
@@ -51,10 +146,10 @@ public class PresupuestosRepository {
             LEFT JOIN 
                 Productos ON PresupuestosDetalle.idProducto = Productos.idProducto
             WHERE 
-                Presupuestos.idPresupuesto = @idPr;";
+                Presupuestos.idPresupuesto = @idPresupuesto;";
 
             using (SqliteCommand command = new SqliteCommand(queryString, connection)) {
-                command.Parameters.AddWithValue("@idPr", id);
+                command.Parameters.AddWithValue("@idPresupuesto", idPresupuesto);
                 connection.Open();
                 using (SqliteDataReader reader = command.ExecuteReader()) {
                     while (reader.Read()) {
@@ -69,7 +164,7 @@ public class PresupuestosRepository {
                         product.Descripcion = reader["Descripcion"].ToString();
                         product.Precio = Convert.ToInt32(reader["Precio"]);
 
-                        pd.CargarProducto(product);
+                        pd.SetProducto(product);
                         pd.cantidad = Convert.ToInt32(reader["Cantidad"]);
 
                         pdList.Add(pd);
@@ -79,5 +174,4 @@ public class PresupuestosRepository {
         }
         return pdList;
     }
-
 }
