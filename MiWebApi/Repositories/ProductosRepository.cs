@@ -4,8 +4,11 @@ namespace TP5.Models;
 public class ProductosRepository
 {
     private string ConnectionString = @"Data Source=db/Tienda.db;Cache=Shared";
+    private PresupuestosRepository presupuestosRepository;
 
-    public ProductosRepository() {}
+    public ProductosRepository() {
+        presupuestosRepository = new PresupuestosRepository();
+    }
 
     public List<Productos> GetProductos()
     {
@@ -71,17 +74,19 @@ public class ProductosRepository
 
         try
         {
-
             using (SqliteConnection connection = new SqliteConnection(ConnectionString))
             {
                 SqliteCommand command = new SqliteCommand(queryString, connection);
-                connection.Open();
                 command.Parameters.AddWithValue("@Descripcion", producto.Descripcion);
                 command.Parameters.AddWithValue("@Precio", producto.Precio);
                 command.Parameters.AddWithValue("@IdP", idProducto);
-                command.ExecuteNonQuery();
+
+                connection.Open();
+                int rowsAffected = command.ExecuteNonQuery(); // Obtiene el número de filas afectadas
+
+                // Retorna true solo si se actualizó al menos una fila
+                return rowsAffected > 0;
             }
-            return true;
         }
         catch (Exception ex)
         {
@@ -127,25 +132,49 @@ public class ProductosRepository
 
     public bool DeleteProducto(int idProducto)
     {
-        string queryString = @"DELETE FROM Productos 
-        WHERE idProducto = @IdP;";
-        
-        try
-        {
-            using (SqliteConnection connection = new SqliteConnection(ConnectionString))
-            {
-                SqliteCommand command = new SqliteCommand(queryString, connection);
-                connection.Open();
-                command.Parameters.AddWithValue("@IdP", idProducto);
+        bool productosDetalleCambio = presupuestosRepository.ExisteIdProdEnPresupuestosDetalle(idProducto);
 
-                int rowsAffected = command.ExecuteNonQuery();
-                return rowsAffected > 0;
-            }
-        }
-        catch (Exception ex)
+        using (SqliteConnection connection = new SqliteConnection(ConnectionString))
         {
-            Console.WriteLine($"Error en DeleteProducto: {ex.Message}");
-            return false;
+            connection.Open();
+            using (var transaction = connection.BeginTransaction())
+            {
+                try
+                {
+                    if (productosDetalleCambio) {
+                        string queryStringPD = @"UPDATE ProductosDetalle SET idProducto = NULL WHERE idProducto = @IdP;";
+                        using (SqliteCommand updateCommand = new SqliteCommand(queryStringPD, connection, transaction))
+                        {
+                            updateCommand.Parameters.AddWithValue("@IdP", idProducto);
+                            updateCommand.ExecuteNonQuery();
+                        }
+                    }
+
+                    string queryString = @"DELETE FROM Productos WHERE idProducto = @IdP;";
+                    using (SqliteCommand deleteCommand = new SqliteCommand(queryString, connection, transaction))
+                    {
+                        deleteCommand.Parameters.AddWithValue("@IdP", idProducto);
+                        int rowsAffected = deleteCommand.ExecuteNonQuery();
+                        
+                        if (rowsAffected > 0)
+                        {
+                            transaction.Commit();
+                            return true;
+                        }
+                        else
+                        {
+                            transaction.Rollback();
+                            return false;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback(); // Revertir la transacción en caso de error
+                    Console.WriteLine($"Error en DeleteProducto: {ex.Message}");
+                    return false;
+                }
+            }
         }
     }
 }

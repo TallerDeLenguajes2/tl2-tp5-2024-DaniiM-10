@@ -147,7 +147,7 @@ public class PresupuestosRepository
         }
     }
 
-    // Funcion Auxiliar
+    // Funciones Auxiliares
     private List<PresupuestosDetalles> GetPresupuestosDetalles(int idPresupuesto) {
         List<PresupuestosDetalles> pdList = new List<PresupuestosDetalles>();
 
@@ -199,5 +199,29 @@ public class PresupuestosRepository
             Console.WriteLine($"Error al obtener detalles de presupuesto: {ex.Message}");
         }
         return pdList;
+    }
+
+    public bool ExisteIdProdEnPresupuestosDetalle(int idProducto) {
+        string queryString = @"SELECT idProducto FROM PresupuestosDetalle WHERE idProducto = @IdP;";
+        try
+        {
+            using (SqliteConnection connection = new SqliteConnection(ConnectionString))
+            {
+                SqliteCommand command = new SqliteCommand(queryString, connection);
+                connection.Open();
+                command.Parameters.AddWithValue("@IdP", idProducto);
+                SqliteDataReader reader = command.ExecuteReader();
+                if (reader.Read())
+                {
+                    return true;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error en ExisteIdEnPresupuesto: {ex.Message}");
+            return false;
+        }
+        return false;
     }
 }
