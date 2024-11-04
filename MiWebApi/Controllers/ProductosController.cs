@@ -66,5 +66,4 @@ public class ProductosController : ControllerBase
         return success ? Ok(new { message = "Producto eliminado con éxito." })
                        : StatusCode(500, new { message = "Error al eliminar el producto o producto no encontrado." });
     }
-    
 }

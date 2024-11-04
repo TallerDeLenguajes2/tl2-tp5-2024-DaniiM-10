@@ -4,11 +4,8 @@ namespace TP5.Models;
 public class ProductosRepository
 {
     private string ConnectionString = @"Data Source=db/Tienda.db;Cache=Shared";
-    private PresupuestosRepository presupuestosRepository;
 
-    public ProductosRepository() {
-        presupuestosRepository = new PresupuestosRepository();
-    }
+    public ProductosRepository() {}
 
     public List<Productos> GetProductos()
     {
@@ -132,49 +129,52 @@ public class ProductosRepository
 
     public bool DeleteProducto(int idProducto)
     {
-        bool productosDetalleCambio = presupuestosRepository.ExisteIdProdEnPresupuestosDetalle(idProducto);
+        var producto = GetProducto(idProducto);
 
-        using (SqliteConnection connection = new SqliteConnection(ConnectionString))
+        if (producto != null) 
         {
-            connection.Open();
-            using (var transaction = connection.BeginTransaction())
+            using (SqliteConnection connection = new SqliteConnection(ConnectionString))
             {
-                try
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
                 {
-                    if (productosDetalleCambio) {
-                        string queryStringPD = @"UPDATE ProductosDetalle SET idProducto = NULL WHERE idProducto = @IdP;";
-                        using (SqliteCommand updateCommand = new SqliteCommand(queryStringPD, connection, transaction))
-                        {
-                            updateCommand.Parameters.AddWithValue("@IdP", idProducto);
-                            updateCommand.ExecuteNonQuery();
-                        }
-                    }
-
-                    string queryString = @"DELETE FROM Productos WHERE idProducto = @IdP;";
-                    using (SqliteCommand deleteCommand = new SqliteCommand(queryString, connection, transaction))
+                    try
                     {
-                        deleteCommand.Parameters.AddWithValue("@IdP", idProducto);
-                        int rowsAffected = deleteCommand.ExecuteNonQuery();
-                        
-                        if (rowsAffected > 0)
+                        string queryString = @"DELETE FROM PresupuestosDetalle WHERE idProducto = @IdP;";
+                        string queryString1 = @"DELETE FROM Productos WHERE idProducto = @IdPr;";
+
+                        using (SqliteCommand deleteCommand = new SqliteCommand(queryString, connection, transaction))
                         {
-                            transaction.Commit();
-                            return true;
+                            deleteCommand.Parameters.AddWithValue("@IdP", idProducto);
+                            deleteCommand.ExecuteNonQuery();
                         }
-                        else
+
+                        using (SqliteCommand deleteCommand1 = new SqliteCommand(queryString1, connection, transaction))
                         {
-                            transaction.Rollback();
-                            return false;
+                            deleteCommand1.Parameters.AddWithValue("@IdPr", idProducto);
+                            int rowsAffected = deleteCommand1.ExecuteNonQuery();
+
+                            if (rowsAffected > 0)
+                            {
+                                transaction.Commit();
+                                return true;
+                            }
+                            else
+                            {
+                                transaction.Rollback();
+                                return false;
+                            }
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    transaction.Rollback(); // Revertir la transacción en caso de error
-                    Console.WriteLine($"Error en DeleteProducto: {ex.Message}");
-                    return false;
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        Console.WriteLine($"Error en DeleteProducto: {ex.Message}");
+                        return false;
+                    }
                 }
             }
         }
+        return false;
     }
 }

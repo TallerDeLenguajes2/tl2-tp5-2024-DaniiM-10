@@ -47,7 +47,7 @@ public class PresupuestosRepository
         return presupuestos;
     }
 
-    public Presupuestos GetPresupuestoId(int idPr) {
+    public Presupuestos GetPresupuesto(int idPr) {
         Presupuestos presupuesto = null;
 
         try
@@ -117,7 +117,7 @@ public class PresupuestosRepository
         try
         {
             Productos producto = productosRepository.GetProducto(presupuestosDetalles.idProducto);
-            Presupuestos presupuesto = GetPresupuestoId(idPresupuesto);
+            Presupuestos presupuesto = GetPresupuesto(idPresupuesto);
 
             if (producto == null || presupuesto == null) return false;
 
@@ -145,6 +145,57 @@ public class PresupuestosRepository
             Console.WriteLine($"Error al insertar detalle de presupuesto: {ex.Message}");
             return false;
         }
+    }
+
+    public bool DeletePresupuesto(int idPresupuesto)
+    {
+        var presupuestos = GetPresupuesto(idPresupuesto);
+
+        if (presupuestos != null) 
+        {
+            using (SqliteConnection connection = new SqliteConnection(ConnectionString))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        string queryString = @"DELETE FROM PresupuestosDetalle WHERE idPresupuesto = @IdP;";
+                        string queryString1 = @"DELETE FROM Presupuestos WHERE idPresupuesto = @IdPr;";
+
+                        using (SqliteCommand deleteCommand = new SqliteCommand(queryString, connection, transaction))
+                        {
+                            deleteCommand.Parameters.AddWithValue("@IdP", idPresupuesto);
+                            deleteCommand.ExecuteNonQuery();
+                        }
+
+                        using (SqliteCommand deleteCommand1 = new SqliteCommand(queryString1, connection, transaction))
+                        {
+                            deleteCommand1.Parameters.AddWithValue("@IdPr", idPresupuesto);
+                            int rowsAffected = deleteCommand1.ExecuteNonQuery();
+
+                            if (rowsAffected > 0)
+                            {
+                                transaction.Commit();
+                                return true;
+                            }
+                            else
+                            {
+                                transaction.Rollback();
+                                return false;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        Console.WriteLine($"Error en DeletePresupuesto: {ex.Message}");
+                        return false;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     // Funciones Auxiliares
@@ -199,29 +250,5 @@ public class PresupuestosRepository
             Console.WriteLine($"Error al obtener detalles de presupuesto: {ex.Message}");
         }
         return pdList;
-    }
-
-    public bool ExisteIdProdEnPresupuestosDetalle(int idProducto) {
-        string queryString = @"SELECT idProducto FROM PresupuestosDetalle WHERE idProducto = @IdP;";
-        try
-        {
-            using (SqliteConnection connection = new SqliteConnection(ConnectionString))
-            {
-                SqliteCommand command = new SqliteCommand(queryString, connection);
-                connection.Open();
-                command.Parameters.AddWithValue("@IdP", idProducto);
-                SqliteDataReader reader = command.ExecuteReader();
-                if (reader.Read())
-                {
-                    return true;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error en ExisteIdEnPresupuesto: {ex.Message}");
-            return false;
-        }
-        return false;
     }
 }

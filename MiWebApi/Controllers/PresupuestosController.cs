@@ -23,9 +23,9 @@ public class PresupuestosController : ControllerBase
     }
     
     [HttpGet("api/{idPresupuesto:int}")]
-    public ActionResult<Presupuestos> GetPresupuestoId(int idPresupuesto)
+    public ActionResult<Presupuestos> GetPresupuesto(int idPresupuesto)
     {
-        var presupuesto = presupuestosRepository.GetPresupuestoId(idPresupuesto);
+        var presupuesto = presupuestosRepository.GetPresupuesto(idPresupuesto);
         if (presupuesto == null) { return NotFound(new { message = "Presupuesto no encontrado." }); }
         return Ok(presupuesto);
     }
@@ -50,5 +50,15 @@ public class PresupuestosController : ControllerBase
         return success 
             ? Ok(new { message = "Detalle de presupuesto agregado con éxito." })
             : NotFound(new { message = "Presupuesto o producto no encontrado." });
+    }
+
+    [HttpDelete("api/{IdPresupuesto:int}")]
+    public ActionResult DeletePresupuesto(int IdPresupuesto)
+    {
+        if (IdPresupuesto <= 0) return BadRequest(new { message = "ID de presupuesto inválido." });
+
+        var success = presupuestosRepository.DeletePresupuesto(IdPresupuesto);
+        return success ? Ok(new { message = "Presupuesto eliminado con éxito." })
+                       : StatusCode(500, new { message = "Error al eliminar el presupuesto o presupuesto no encontrado." });
     }
 }
