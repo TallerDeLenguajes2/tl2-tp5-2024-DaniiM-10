@@ -23,12 +23,12 @@ public class ProductosController : ControllerBase
         return Ok(productos);
     }
 
-    [HttpGet("api/{idP:int}")]
-    public ActionResult<Productos> GetProductById(int idP)
+    [HttpGet("api/{IdProducto:int}")]
+    public ActionResult<Productos> GetProductById(int IdProducto)
     {
-        if (idP <= 0) return BadRequest(new { message = "ID de producto inválido." });
+        if (IdProducto <= 0) return BadRequest(new { message = "ID de producto inválido." });
 
-        var producto = productosRepository.GetProducto(idP);
+        var producto = productosRepository.GetProducto(IdProducto);
         
         if (producto == null) { return NotFound(new { message = "Producto no encontrado." }); }
 
@@ -47,22 +47,22 @@ public class ProductosController : ControllerBase
             : StatusCode(500, new { message = "Error al crear el producto." });
     }
 
-    [HttpPut("api/{IdP:int}")]
-    public ActionResult PutProduct(int IdP, [FromBody] Productos producto)
+    [HttpPut("api/{IdProducto:int}")]
+    public ActionResult PutProduct(int IdProducto, [FromBody] Productos producto)
     {
-        if (IdP <= 0 || producto == null || string.IsNullOrWhiteSpace(producto.Descripcion) || producto.Precio <= 0) { return BadRequest(new { message = "Datos de producto inválidos." }); }
+        if (IdProducto <= 0 || producto == null || string.IsNullOrWhiteSpace(producto.Descripcion) || producto.Precio <= 0) { return BadRequest(new { message = "Datos de producto inválidos." }); }
 
-        var success = productosRepository.PutProducto(IdP, producto);
+        var success = productosRepository.PutProducto(IdProducto, producto);
         return success ? Ok(new { message = "Producto actualizado con éxito." })
                        : StatusCode(500, new { message = "Error al actualizar el producto." });
     }
 
-    [HttpDelete("api/{IdP:int}")]
-    public ActionResult DeleteProduct(int IdP)
+    [HttpDelete("api/{IdProducto:int}")]
+    public ActionResult DeleteProduct(int IdProducto)
     {
-        if (IdP <= 0) return BadRequest(new { message = "ID de producto inválido." });
+        if (IdProducto <= 0) return BadRequest(new { message = "ID de producto inválido." });
 
-        var success = productosRepository.DeleteProducto(IdP);
+        var success = productosRepository.DeleteProducto(IdProducto);
         return success ? Ok(new { message = "Producto eliminado con éxito." })
                        : StatusCode(500, new { message = "Error al eliminar el producto o producto no encontrado." });
     }
