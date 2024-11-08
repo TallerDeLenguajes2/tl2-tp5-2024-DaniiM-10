@@ -42,9 +42,9 @@ public class PresupuestosController : ControllerBase
     }
     
     [HttpPost("api/{idPresupuesto:int}/ProductoDetalle")]
-    public ActionResult PostPresupuestoDetalle(int idPresupuesto, [FromBody] PresupuestosDetallesPost presupuestosDetalles)
+    public ActionResult PostPresupuestoDetalle(int idPresupuesto, [FromBody] PresupuestosDetalles presupuestosDetalles)
     {
-        if (presupuestosDetalles == null || presupuestosDetalles.cantidad <= 0 || presupuestosDetalles.idProducto <= 0) { return BadRequest(new { message = "Datos de detalle de presupuesto inválidos." }); }
+        if (presupuestosDetalles == null || presupuestosDetalles.cantidad <= 0 || presupuestosDetalles.producto.idProducto <= 0) { return BadRequest(new { message = "Datos de detalle de presupuesto inválidos." }); }
 
         var success = presupuestosRepository.PostPresupuestoDetalle(idPresupuesto, presupuestosDetalles);
         return success 
